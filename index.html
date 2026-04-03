@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora API</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #f5f5f5; }
+    .container { max-width: 420px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { font-size: 20px; font-weight: 500; margin-bottom: 1.5rem; color: #111; }
+    .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 1.25rem; }
+    label { font-size: 13px; color: #666; display: block; margin-bottom: 4px; }
+    input, select { width: 100%; padding: 8px 10px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; }
+    .btn { width: 100%; padding: 10px; font-size: 15px; font-weight: 500; cursor: pointer; border: 1px solid #ccc; border-radius: 8px; background: #fff; }
+    .btn:hover { background: #f0f0f0; }
+    .result-card { background: #f5f5f5; border-radius: 8px; padding: 1rem; margin-top: 1rem; display: none; }
+    .result-label { font-size: 13px; color: #666; margin-bottom: 4px; }
+    .result-value { font-size: 28px; font-weight: 500; color: #111; }
+    .result-detail { font-size: 13px; color: #999; margin-top: 4px; }
+    .error-card { background: #fff0f0; border: 1px solid #ffcccc; border-radius: 8px; padding: 1rem; margin-top: 1rem; display: none; }
+    .error-text { font-size: 14px; color: #cc0000; }
+    .loading { font-size: 14px; color: #999; text-align: center; padding: 0.5rem; display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Calculadora API</h1>
+    <div class="card">
+      <label for="numero1">Número 1</label>
+      <input type="number" id="numero1" placeholder="Ex: 10" step="any" />
+
+      <label for="numero2">Número 2</label>
+      <input type="number" id="numero2" placeholder="Ex: 5" step="any" />
+
+      <label for="operacao">Operação</label>
+      <select id="operacao">
+        <option value="somar">Soma</option>
+        <option value="subtrair">Subtração</option>
+        <option value="multiplicar">Multiplicação</option>
+        <option value="dividir">Divisão</option>
+      </select>
+
+      <button class="btn" onclick="calcular()">Calcular</button>
+
+      <p class="loading" id="loading">Calculando...</p>
+
+      <div class="result-card" id="result-card">
+        <p class="result-label" id="result-label">Resultado</p>
+        <p class="result-value" id="result-value">—</p>
+        <p class="result-detail" id="result-detail"></p>
+      </div>
+
+      <div class="error-card" id="error-card">
+        <p class="error-text" id="error-text"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function calcular() {
+      const numero1 = parseFloat(document.getElementById('numero1').value);
+      const numero2 = parseFloat(document.getElementById('numero2').value);
+      const operacao = document.getElementById('operacao').value;
+      const resultCard = document.getElementById('result-card');
+      const errorCard = document.getElementById('error-card');
+      const loading = document.getElementById('loading');
+
+      resultCard.style.display = 'none';
+      errorCard.style.display = 'none';
+
+      if (isNaN(numero1) || isNaN(numero2)) {
+        errorCard.style.display = 'block';
+        document.getElementById('error-text').textContent = 'Preencha os dois números antes de calcular.';
+        return;
+      }
+
+      loading.style.display = 'block';
+
+      try {
+        const response = await fetch(`http://localhost:8000/${operacao}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ numero1, numero2 })
+        });
+        const data = await response.json();
+        loading.style.display = 'none';
+
+        if (!response.ok) {
+          errorCard.style.display = 'block';
+          document.getElementById('error-text').textContent = data.detail || 'Erro desconhecido.';
+          return;
+        }
+
+        const nomes = { somar: 'Soma', subtrair: 'Subtração', multiplicar: 'Multiplicação', dividir: 'Divisão' };
+        const simbolos = { somar: '+', subtrair: '−', multiplicar: '×', dividir: '÷' };
+        resultCard.style.display = 'block';
+        document.getElementById('result-label').textContent = nomes[operacao];
+        document.getElementById('result-value').textContent = data.resultado.toLocaleString('pt-BR', { maximumFractionDigits: 10 });
+        document.getElementById('result-detail').textContent = `${numero1} ${simbolos[operacao]} ${numero2}`;
+      } catch (e) {
+        loading.style.display = 'none';
+        errorCard.style.display = 'block';
+        document.getElementById('error-text').textContent = 'Não foi possível conectar à API. Verifique se o servidor está rodando.';
+      }
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Enter') calcular(); });
+  </script>
+</body>
+</html>
