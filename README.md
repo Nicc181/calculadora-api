@@ -56,4 +56,5 @@ uvicorn main:app --reload
 
 ## Projeto Avaliativo
 
+Contribuidores: Felipe monteiro de souza https://github.com/FelipeCoelho19
 Projeto Avaliativo desenvolvido para disciplina Programação de Sistemas Distribuidos da Universidade do Grandes Lagos - UNILAGO sob supervisão do Professor Gleydes Oliveira https://github.com/gleydes
